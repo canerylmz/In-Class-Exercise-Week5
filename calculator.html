@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculator</title>
+  <style>
+    body {
+      margin: 0;
+      background: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .calculator {
+      width: 310px;
+      height: 440px;
+      background: #0075cc;
+      border: 10px solid #0075cc;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .display {
+      height: 78px;
+      background: #ffffff;
+      color: #000000;
+      font-size: 42px;
+      font-weight: 700;
+      text-align: right;
+      line-height: 78px;
+      padding: 0 12px;
+      box-sizing: border-box;
+      margin-bottom: 16px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 59px);
+      grid-template-rows: repeat(5, 55px);
+      column-gap: 18px;
+      row-gap: 15px;
+      padding: 4px 0 4px 0;
+      box-sizing: border-box;
+      width: 100%;
+      flex: 1;
+      align-content: start;
+      justify-content: start;
+    }
+
+    button {
+      width: 59px;
+      height: 55px;
+      border: none;
+      padding: 0;
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+      cursor: pointer;
+      font-family: Arial, Helvetica, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .num {
+      background: #828282;
+    }
+
+    .op-light {
+      background: #9b9b9b;
+    }
+
+    .op-dark {
+      background: #00569d;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="display" id="display">0</div>
+
+    <div class="buttons">
+      <button class="op-light" data-action="AC">AC</button>
+      <button class="op-light" data-action="C">C</button>
+      <button class="op-light" data-action="sqrt">√</button>
+      <button class="op-light" data-action="percent">%</button>
+
+      <button class="num" data-value="7">7</button>
+      <button class="num" data-value="8">8</button>
+      <button class="num" data-value="9">9</button>
+      <button class="op-light" data-value="/">÷</button>
+
+      <button class="num" data-value="4">4</button>
+      <button class="num" data-value="5">5</button>
+      <button class="num" data-value="6">6</button>
+      <button class="op-light" data-value="*">×</button>
+
+      <button class="num" data-value="1">1</button>
+      <button class="num" data-value="2">2</button>
+      <button class="num" data-value="3">3</button>
+      <button class="op-light" data-value="-">−</button>
+
+      <button class="num" data-value="0">0</button>
+      <button class="num" data-value=".">.</button>
+      <button class="op-dark" data-value="=">=</button>
+      <button class="op-light" data-value="+">+</button>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    let current = '0';
+    let previous = null;
+    let operator = null;
+    let resetDisplay = false;
+
+    function updateDisplay() {
+      display.textContent = current;
+    }
+
+    function inputNumber(value) {
+      if (resetDisplay) {
+        current = value === '.' ? '0.' : value;
+        resetDisplay = false;
+        return;
+      }
+
+      if (value === '.' && current.includes('.')) {
+        return;
+      }
+
+      if (current === '0' && value !== '.') {
+        current = value;
+      } else {
+        current += value;
+      }
+    }
+
+    function calculate() {
+      const prev = parseFloat(previous);
+      const curr = parseFloat(current);
+      if (Number.isNaN(prev) || Number.isNaN(curr) || !operator) return;
+
+      let result;
+      switch (operator) {
+        case '+':
+          result = prev + curr;
+          break;
+        case '-':
+          result = prev - curr;
+          break;
+        case '*':
+          result = prev * curr;
+          break;
+        case '/':
+          result = curr === 0 ? 0 : prev / curr;
+          break;
+        default:
+          return;
+      }
+
+      current = String(result);
+      previous = null;
+      operator = null;
+      resetDisplay = true;
+    }
+
+    function clearEntry() {
+      current = current.length > 1 ? current.slice(0, -1) : '0';
+    }
+
+    function allClear() {
+      current = '0';
+      previous = null;
+      operator = null;
+      resetDisplay = false;
+    }
+
+    function squareRoot() {
+      const value = parseFloat(current);
+      current = value < 0 || Number.isNaN(value) ? '0' : String(Math.sqrt(value));
+      resetDisplay = true;
+    }
+
+    function percent() {
+      const value = parseFloat(current);
+      current = Number.isNaN(value) ? '0' : String(value / 100);
+      resetDisplay = true;
+    }
+
+    document.querySelectorAll('button').forEach((button) => {
+      button.addEventListener('click', () => {
+        const { value, action } = button.dataset;
+
+        if (action === 'AC') {
+          allClear();
+        } else if (action === 'C') {
+          clearEntry();
+        } else if (action === 'sqrt') {
+          squareRoot();
+        } else if (action === 'percent') {
+          percent();
+        } else if (value === '=') {
+          calculate();
+        } else if (value && (!Number.isNaN(Number(value)) || value === '.')) {
+          inputNumber(value);
+        } else if (value) {
+          if (operator && !resetDisplay) {
+            calculate();
+          }
+          previous = current;
+          operator = value;
+          resetDisplay = true;
+        }
+
+        updateDisplay();
+      });
+    });
+
+    updateDisplay();
+
+    console.assert(display.textContent === '0', 'Initial display should be 0');
+    allClear();
+    inputNumber('9');
+    squareRoot();
+    console.assert(current === '3', 'Square root of 9 should be 3');
+    allClear();
+    inputNumber('5');
+    inputNumber('0');
+    percent();
+    console.assert(current === '0.5', '50 percent should be 0.5');
+    allClear();
+  </script>
+</body>
+</html>
